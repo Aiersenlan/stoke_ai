@@ -197,7 +197,12 @@
             <div class="tab-pane fade show active" id="twse" role="tabpanel">
                 <div class="text-center p-5" id="twse-loading">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <h4 class="mt-3 text-secondary">正在努力載入資料...</h4>
+                    <h4 class="mt-3 text-secondary" id="twse-loading-text">正在努力載入資料...</h4>
+                    <div class="progress mt-3 mx-auto" style="height: 20px; max-width: 400px; display: none;"
+                        id="twse-progress-container">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                            id="twse-progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
                 </div>
                 <div class="table-wrapper" id="twse-content" style="display: none;"></div>
             </div>
@@ -205,9 +210,29 @@
             <div class="tab-pane fade" id="tpex" role="tabpanel">
                 <div class="text-center p-5" id="tpex-loading">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <h4 class="mt-3 text-secondary">正在努力載入資料...</h4>
+                    <h4 class="mt-3 text-secondary" id="tpex-loading-text">正在努力載入資料...</h4>
+                    <div class="progress mt-3 mx-auto" style="height: 20px; max-width: 400px; display: none;"
+                        id="tpex-progress-container">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                            id="tpex-progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
                 </div>
                 <div class="table-wrapper" id="tpex-content" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="mt-4" id="debugLogContainer" style="display: none;">
+            <div class="card bg-dark border-secondary">
+                <div
+                    class="card-header border-secondary text-warning fw-bold d-flex justify-content-between align-items-center">
+                    <span>⚙️ 執行日誌 (Debug Console)</span>
+                    <button type="button" class="btn-close btn-close-white"
+                        onclick="document.getElementById('debugLogContainer').style.display='none'"></button>
+                </div>
+                <div class="card-body p-0">
+                    <pre class="m-0 p-3 text-light" id="debugLogOutput"
+                        style="max-height: 250px; overflow-y: auto; font-size: 0.85rem; background: #111; border-radius: 0 0 5px 5px;"></pre>
+                </div>
             </div>
         </div>
     </div>
@@ -290,7 +315,16 @@
                 // Set loading status
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 正在連線中...';
                 btn.disabled = true;
-                showLoading(true);
+
+                let simProgress = 0;
+                showLoading(true, 0, "正在連線交易所與爬取資料中，請稍候...");
+                const simInterval = setInterval(() => {
+                    if (simProgress < 90) {
+                        simProgress += Math.random() * 5 + 1;
+                        if (simProgress > 90) simProgress = 90;
+                        showLoading(true, simProgress, `爬蟲執行中... ${Math.floor(simProgress)}%`);
+                    }
+                }, 400);
 
                 try {
                     const res = await fetch('/trigger_analysis', {
@@ -300,20 +334,30 @@
                     });
                     const result = await res.json();
 
+                    clearInterval(simInterval);
+                    showLoading(true, 100, "資料處理完成！準備渲染...");
+
+                    document.getElementById('debugLogContainer').style.display = 'block';
+                    document.getElementById('debugLogOutput').textContent = result.debug_log || '無額外日誌資訊。';
+
                     if (res.ok) {
-                        alert('✅ 成功：' + result.message + '\n畫面即將重新整理。');
-                        loadAvailableDates(); // This will automatically load the newest file
-                        document.getElementById('dateSelect').value = targetDate.replace(/-/g, ''); // Try to select newly fetched date
-                        loadReport(targetDate.replace(/-/g, ''));
+                        setTimeout(async () => {
+                            showLoading(false);
+                            await loadAvailableDates();
+                            document.getElementById('dateSelect').value = targetDate.replace(/-/g, '');
+                            loadReport(targetDate.replace(/-/g, ''));
+                        }, 600);
                     } else {
-                        alert('❌ 錯誤：' + result.message);
+                        showLoading(false);
+                        showError('❌ 錯誤：' + (result.message || '未知錯誤'));
                     }
                 } catch (error) {
-                    alert('發生錯誤，請稍後再試或是聯絡系統管理員。\n' + error);
+                    clearInterval(simInterval);
+                    showLoading(false);
+                    showError('發生錯誤，請稍後再試或是聯絡系統管理員。\n' + error);
                 } finally {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
-                    showLoading(false);
                 }
             });
         });
@@ -375,11 +419,26 @@
             renderTable('tpex-content', currentReportData['上櫃'], sortMode, limitMode);
         }
 
-        function showLoading(isLoading) {
+        function showLoading(isLoading, percent = null, text = "正在努力載入資料...") {
             document.getElementById('twse-loading').style.display = isLoading ? 'block' : 'none';
             document.getElementById('twse-content').style.display = isLoading ? 'none' : 'block';
             document.getElementById('tpex-loading').style.display = isLoading ? 'block' : 'none';
             document.getElementById('tpex-content').style.display = isLoading ? 'none' : 'block';
+
+            if (isLoading) {
+                document.getElementById('twse-loading-text').textContent = text;
+                document.getElementById('tpex-loading-text').textContent = text;
+
+                if (percent !== null) {
+                    document.getElementById('twse-progress-container').style.display = 'block';
+                    document.getElementById('twse-progress-bar').style.width = percent + '%';
+                    document.getElementById('tpex-progress-container').style.display = 'block';
+                    document.getElementById('tpex-progress-bar').style.width = percent + '%';
+                } else {
+                    document.getElementById('twse-progress-container').style.display = 'none';
+                    document.getElementById('tpex-progress-container').style.display = 'none';
+                }
+            }
         }
 
         function showError(msg) {

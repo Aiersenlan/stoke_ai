@@ -95,14 +95,26 @@ def trigger_analysis():
         else:
             print("Manual trigger activated for today...")
             
-        subprocess.check_call(cmd)
-        return jsonify({"status": "success", "message": "分析完成，新的報表已產出！"})
-    except subprocess.CalledProcessError as e:
-        return jsonify({"status": "error", "message": "分析失敗: 請確保該日期為交易日且有開盤資料。"}), 500
+        process = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        
+        debug_output = process.stdout + "\n" + process.stderr
+        
+        if process.returncode != 0:
+            return jsonify({
+                "status": "error", 
+                "message": "分析失敗: 執行過程發生錯誤或沒有資料。",
+                "debug_log": debug_output
+            }), 500
+            
+        return jsonify({
+            "status": "success", 
+            "message": "分析完成，新的報表已產出！",
+            "debug_log": debug_output
+        })
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"status": "error", "message": f"系統錯誤: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": f"系統錯誤: {str(e)}", "debug_log": traceback.format_exc()}), 500
 
 if __name__ == '__main__':
     print("啟動網頁伺服器: http://localhost:5000")
