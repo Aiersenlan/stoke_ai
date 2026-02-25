@@ -1,22 +1,25 @@
-import urllib.request
+import requests
 import json
 import ssl
 from datetime import datetime
 import time
+import traceback
 
-ssl._create_default_https_context = ssl._create_unverified_context
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
     'Accept': 'application/json, text/javascript, */*; q=0.01',
     'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Connection': 'keep-alive'
+    'Connection': 'keep-alive',
+    'Referer': 'https://www.tpex.org.tw/'
 }
 
 def get_json(url):
     try:
-        req = urllib.request.Request(url, headers=headers)
-        res = urllib.request.urlopen(req, timeout=10)
-        return json.loads(res.read())
+        session = requests.Session()
+        res = session.get(url, headers=headers, timeout=15)
+        # Check HTTP response status and throw if not 200
+        res.raise_for_status()
+        return res.json()
     except Exception as e:
         print(f"Error fetching {url}: {e}")
         return None
