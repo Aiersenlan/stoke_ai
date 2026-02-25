@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票大戶動向分析報表 - 專業看盤版</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', '微軟正黑體', sans-serif;
+            background-color: #0d0d0d;
+            color: #dcdcdc;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 20px;
+            background: #161616;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+        }
+
+        .table {
+            border-color: #333;
+        }
+
+        .table th {
+            background-color: #1f1f1f !important;
+            color: #f0f0f0 !important;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+            border-bottom: 2px solid #555;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .table .sub-header th {
+            background-color: #111111 !important;
+            color: #aaaaaa !important;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .table td {
+            text-align: right;
+            vertical-align: middle;
+            white-space: nowrap;
+            border-color: #2b2b2b;
+        }
+
+        .table .text-center {
+            text-align: center;
+        }
+
+        .table .text-left {
+            text-align: left;
+        }
+
+        /* Professional Stock Terminal Colors */
+        .th-buy {
+            background-color: #5a1a1a !important;
+            border-bottom: 2px solid #ff4d4d !important;
+            color: #ffcccc !important;
+        }
+
+        .th-sell {
+            background-color: #1a4a1a !important;
+            border-bottom: 2px solid #4dff4d !important;
+            color: #ccffcc !important;
+        }
+
+        .bg-red-light {
+            background-color: #3a1c1c !important;
+            color: #ff7b7b !important;
+        }
+
+        .bg-red-dark {
+            background-color: #7b1a1a !important;
+            color: #ffb3b3 !important;
+        }
+
+        .bg-green-light {
+            background-color: #1c3a1c !important;
+            color: #7bff7b !important;
+        }
+
+        .bg-green-dark {
+            background-color: #1a6b1a !important;
+            color: #b3ffb3 !important;
+        }
+
+        .hover-bg-yellow {
+            background-color: #3d3511 !important;
+            color: #ffe600 !important;
+            transition: all 0.2s;
+        }
+
+        .stock-clickable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .stock-clickable:hover::after {
+            content: ' \1F50D';
+            position: absolute;
+            right: 4px;
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .header-section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #161616;
+            border-radius: 8px;
+            border: 1px solid #333;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Custom Dark Scrollbar */
+        ::-webkit-scrollbar {
+            height: 10px;
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0d0d0d;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        .nav-pills .nav-link {
+            color: #aaa;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #333;
+            color: #fff;
+            border-color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid py-4">
+        <div class="header-section d-flex justify-content-between align-items-center">
+            <h2 class="mb-0 text-light fw-bold" style="letter-spacing: 1.5px;">📈 當日大戶動向（買賣超）</h2>
+
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <label for="dateSelect" class="form-label mb-0 fw-bold">選擇日期：</label>
+                <select id="dateSelect" class="form-select w-auto text-center fw-bold shadow-sm border-primary">
+                    <option value="">載入中...</option>
+                </select>
+                <label for="limitSelect" class="form-label mb-0 fw-bold ms-2">顯示：</label>
+                <select id="limitSelect" class="form-select w-auto text-center fw-bold shadow-sm border-warning">
+                    <option value="35">前 35 名</option>
+                    <option value="all">顯示全部</option>
+                </select>
+                <label for="sortSelect" class="form-label mb-0 fw-bold ms-2">排序：</label>
+                <select id="sortSelect" class="form-select w-auto text-center fw-bold shadow-sm border-info">
+                    <option value="val">依估價排名</option>
+                    <option value="shares">依股數排名</option>
+                </select>
+                <button id="downloadBtn" class="btn btn-outline-success fw-bold">⬇️ 下載 Excel</button>
+                <button id="refreshBtn" class="btn btn-primary fw-bold">🔄 重新整理</button>
+            </div>
+        </div>
+
+        <ul class="nav nav-pills mb-3 gap-2" id="marketTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold fs-5 px-4" id="twse-tab" data-bs-toggle="tab"
+                    data-bs-target="#twse" type="button" role="tab" aria-selected="true">上市</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold fs-5 px-4 border" id="tpex-tab" data-bs-toggle="tab"
+                    data-bs-target="#tpex" type="button" role="tab" aria-selected="false">上櫃</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="marketTabsContent">
+            <div class="tab-pane fade show active" id="twse" role="tabpanel">
+                <div class="text-center p-5" id="twse-loading">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <h4 class="mt-3 text-secondary">正在努力載入資料...</h4>
+                </div>
+                <div class="table-wrapper" id="twse-content" style="display: none;"></div>
+            </div>
+
+            <div class="tab-pane fade" id="tpex" role="tabpanel">
+                <div class="text-center p-5" id="tpex-loading">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <h4 class="mt-3 text-secondary">正在努力載入資料...</h4>
+                </div>
+                <div class="table-wrapper" id="tpex-content" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" class="btn btn-warning fw-bold rounded-circle shadow-lg"
+        style="position: fixed; bottom: 30px; right: 30px; display: none; z-index: 1050; width: 50px; height: 50px; font-size: 20px; outline: none; border: none; align-items: center; justify-content: center;">⬆️</button>
+
+    <script>
+        let currentReportData = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAvailableDates();
+
+            const backToTopBtn = document.getElementById('backToTopBtn');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    backToTopBtn.style.display = 'flex';
+                } else {
+                    backToTopBtn.style.display = 'none';
+                }
+            });
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            document.getElementById('dateSelect').addEventListener('change', (e) => {
+                if (e.target.value) {
+                    loadReport(e.target.value);
+                }
+            });
+
+            document.getElementById('sortSelect').addEventListener('change', () => {
+                renderBothTables();
+            });
+
+            document.getElementById('limitSelect').addEventListener('change', () => {
+                renderBothTables();
+            });
+
+            document.getElementById('refreshBtn').addEventListener('click', () => {
+                const currentDate = document.getElementById('dateSelect').value;
+                if (currentDate) {
+                    loadReport(currentDate);
+                } else {
+                    loadAvailableDates();
+                }
+            });
+
+            document.getElementById('downloadBtn').addEventListener('click', () => {
+                const currentDate = document.getElementById('dateSelect').value;
+                if (currentDate) {
+                    window.location.href = `/download/${currentDate}`;
+                } else {
+                    alert('請先選擇日期');
+                }
+            });
+        });
+
+        async function loadAvailableDates() {
+            try {
+                const res = await fetch('/get_available_dates');
+                const data = await res.json();
+
+                const select = document.getElementById('dateSelect');
+                select.innerHTML = '';
+
+                if (data.dates && data.dates.length > 0) {
+                    data.dates.forEach(date => {
+                        const formatted = `${date.substring(0, 4)}/${date.substring(4, 6)}/${date.substring(6, 8)}`;
+                        const option = document.createElement('option');
+                        option.value = date;
+                        option.textContent = formatted;
+                        select.appendChild(option);
+                    });
+
+                    // Trigger load for the newest
+                    loadReport(data.dates[0]);
+                } else {
+                    select.innerHTML = '<option value="">無可用報表</option>';
+                    showError('未找到任何報表檔案。請確定有先執行 analyze.py 產出檔案。');
+                }
+            } catch (error) {
+                console.error('Error fetching dates:', error);
+                showError('無法載入日期列表');
+            }
+        }
+
+        async function loadReport(dateStr) {
+            showLoading(true);
+            try {
+                const res = await fetch(`/get_report/${dateStr}`);
+                if (!res.ok) throw new Error('報表讀取失敗');
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                currentReportData = data;
+                renderBothTables();
+
+                showLoading(false);
+            } catch (error) {
+                console.error('Error loading report:', error);
+                showError('載入報表內容時發生錯誤: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        function renderBothTables() {
+            if (!currentReportData) return;
+            const sortMode = document.getElementById('sortSelect').value;
+            const limitMode = document.getElementById('limitSelect').value;
+            renderTable('twse-content', currentReportData['上市'], sortMode, limitMode);
+            renderTable('tpex-content', currentReportData['上櫃'], sortMode, limitMode);
+        }
+
+        function showLoading(isLoading) {
+            document.getElementById('twse-loading').style.display = isLoading ? 'block' : 'none';
+            document.getElementById('twse-content').style.display = isLoading ? 'none' : 'block';
+            document.getElementById('tpex-loading').style.display = isLoading ? 'block' : 'none';
+            document.getElementById('tpex-content').style.display = isLoading ? 'none' : 'block';
+        }
+
+        function showError(msg) {
+            document.getElementById('twse-content').innerHTML = `<div class="alert alert-danger">${msg}</div>`;
+            document.getElementById('tpex-content').innerHTML = `<div class="alert alert-danger">${msg}</div>`;
+            document.getElementById('twse-content').style.display = 'block';
+            document.getElementById('tpex-content').style.display = 'block';
+            document.getElementById('twse-loading').style.display = 'none';
+            document.getElementById('tpex-loading').style.display = 'none';
+        }
+
+        function formatNumber(num, decimals = 0) {
+            if (num === '' || num === null || num === undefined) return '';
+            // If it's a number, format it with commas
+            if (!isNaN(num) && typeof num === 'number') {
+                return Number(num).toLocaleString('en-US', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                });
+            }
+            return num;
+        }
+
+        function renderTable(containerId, sheetData, sortMode = 'val', limitMode = '35') {
+            if (!sheetData) {
+                document.getElementById(containerId).innerHTML = '<div class="alert alert-warning">沒有資料</div>';
+                return;
+            }
+
+            // The exact layout relies on us finding related stocks in rows and knowing which columns represent what.
+            // Based on our Python logic:
+            // Col 1,2: 外資買超 (0-5)
+            // Col 3: empty
+            // Col 8,9: 外資賣超 (7-12)
+            // Col 15,16: 投信買超 (14-19)
+            // Col 22,23: 投信賣超 (21-26)
+
+            // To make HTML perfectly styled like the Excel, we need to apply coloring logic in JS based on the data.
+            // Since we don't have the stock_state here directly, we will reconstruct it exactly as the python script did:
+
+            // Re-calculate the states for the view.
+            // Note: The python script does exact same coloring. 
+            // In the data we provided via JSON, we only have raw values. 
+            // Let's build a quick map of Code -> {f_val, i_val} to determine colors!
+
+            // 1. Extract valid blocks for sorting
+            let fb_list = []; let fs_list = []; let ib_list = []; let is_list = [];
+            sheetData.data.forEach(row => {
+                if (row[0] !== '') fb_list.push(row.slice(0, 6));
+                if (row[7] !== '') fs_list.push(row.slice(7, 13));
+                if (row[14] !== '') ib_list.push(row.slice(14, 20));
+                if (row[21] !== '') is_list.push(row.slice(21, 27));
+            });
+
+            // 2. Sorting function
+            const sortFn = (a, b) => {
+                // val is index 5, shares is index 4
+                const a_val = Number(a[sortMode === 'val' ? 5 : 4]) || 0;
+                const b_val = Number(b[sortMode === 'val' ? 5 : 4]) || 0;
+                return Math.abs(b_val) - Math.abs(a_val);
+            };
+
+            fb_list.sort(sortFn);
+            fs_list.sort(sortFn);
+            ib_list.sort(sortFn);
+            is_list.sort(sortFn);
+
+            // 3. Apply limits
+            if (limitMode === '35') {
+                fb_list = fb_list.slice(0, 35);
+                fs_list = fs_list.slice(0, 35);
+                ib_list = ib_list.slice(0, 35);
+                is_list = is_list.slice(0, 35);
+            }
+
+            // 4. Build a map restricted to only visible stock rows to determine colors
+            const stockDataMap = new Map();
+            const trackStock = (code, shares, isForeign) => {
+                if (!code || code === '') return;
+                const key = String(code);
+                const ex = stockDataMap.get(key) || {};
+                if (isForeign) ex.f_val = Number(shares);
+                else ex.i_val = Number(shares);
+                stockDataMap.set(key, ex);
+            };
+            fb_list.forEach(r => trackStock(r[0], r[4], true));
+            fs_list.forEach(r => trackStock(r[0], r[4], true));
+            ib_list.forEach(r => trackStock(r[0], r[4], false));
+            is_list.forEach(r => trackStock(r[0], r[4], false));
+
+            // Determine state colors
+            function getFillClass(code, isForeignInfo) {
+                if (!code) return '';
+                const d = stockDataMap.get(String(code));
+                if (!d) return '';
+
+                const f_val = d.f_val || 0;
+                const i_val = d.i_val || 0;
+
+                // Color only applies if BOTH sides are currently visible in the sliced data
+                if (f_val === 0 || i_val === 0) return '';
+
+                if ((f_val > 0 && i_val > 0) || (f_val < 0 && i_val < 0)) {
+                    if (Math.abs(f_val) > Math.abs(i_val)) {
+                        return isForeignInfo ? 'bg-red-dark' : 'bg-red-light';
+                    } else if (Math.abs(f_val) < Math.abs(i_val)) {
+                        return isForeignInfo ? 'bg-red-light' : 'bg-red-dark';
+                    } else {
+                        return 'bg-red-light';
+                    }
+                } else if ((f_val > 0 && i_val < 0) || (f_val < 0 && i_val > 0)) {
+                    if (Math.abs(f_val) > Math.abs(i_val)) {
+                        return isForeignInfo ? 'bg-green-dark' : 'bg-green-light';
+                    } else {
+                        return isForeignInfo ? 'bg-green-light' : 'bg-green-dark';
+                    }
+                }
+                return '';
+            }
+
+            // Determine max rows
+            const maxRows = Math.max(fb_list.length, fs_list.length, ib_list.length, is_list.length);
+
+            // Reconstruct sorted rows
+            const sortedRows = [];
+            for (let i = 0; i < maxRows; i++) {
+                const newRow = new Array(27).fill('');
+                if (i < fb_list.length) fb_list[i].forEach((v, idx) => newRow[idx] = v);
+                if (i < fs_list.length) fs_list[i].forEach((v, idx) => newRow[idx + 7] = v);
+                if (i < ib_list.length) ib_list[i].forEach((v, idx) => newRow[idx + 14] = v);
+                if (i < is_list.length) is_list[i].forEach((v, idx) => newRow[idx + 21] = v);
+                sortedRows.push(newRow);
+            }
+
+            let html = '<table class="table table-bordered table-dark table-hover table-sm align-middle">';
+
+            // Main Headers
+            html += '<thead><tr>';
+            html += `<th colspan="6" class="fs-5 shadow-sm th-buy">外資買超</th><th class="border-0 bg-transparent"></th>`;
+            html += `<th colspan="6" class="fs-5 shadow-sm th-sell">外資賣超</th><th class="border-0 bg-transparent"></th>`;
+            html += `<th colspan="6" class="fs-5 shadow-sm th-buy">投信買超</th><th class="border-0 bg-transparent"></th>`;
+            html += `<th colspan="6" class="fs-5 shadow-sm th-sell">投信賣超</th>`;
+            html += '</tr><tr class="sub-header">';
+
+            // Sub Headers
+            const sub = sheetData.sub_headers;
+            for (let i = 0; i < 4; i++) {
+                html += `
+                    <th>${sub[0]}</th>
+                    <th>${sub[1]}</th>
+                    <th>${sub[2]}</th>
+                    <th>${sub[3]}</th>
+                    <th>${sub[4]}</th>
+                    <th>${sub[5]}</th>
+                `;
+                if (i < 3) html += '<th class="border-0 bg-transparent px-1"></th>';
+            }
+            html += '</tr></thead><tbody>';
+
+            // Data Rows
+            sortedRows.forEach(row => {
+                html += '<tr>';
+
+                // Block builder
+                const buildBlock = (startIndex, isForeign) => {
+                    const code = row[startIndex];
+                    const name = row[startIndex + 1];
+                    const price = row[startIndex + 2];
+                    const vwap = row[startIndex + 3];
+                    const shares = row[startIndex + 4];
+                    const val = row[startIndex + 5];
+
+                    if (code === '') {
+                        return `<td></td><td></td><td></td><td></td><td></td><td></td>`;
+                    }
+
+                    const fillClass = getFillClass(code, isForeign);
+
+                    return `
+                        <td class="text-center font-monospace">${code}</td>
+                        <td class="text-center fw-bold stock-clickable ${fillClass}" data-code="${code}" onclick="scrollToStock('${code}', this)" onmouseover="highlightStock('${code}')" onmouseout="removeHighlightStock('${code}')" title="點擊跳轉到另一個買賣超區域">${name}</td>
+                        <td class="stock-data-${code}">${formatNumber(price, 2)}</td>
+                        <td class="stock-data-${code}">${formatNumber(vwap, 2)}</td>
+                        <td class="stock-data-${code}">${formatNumber(shares, 0)}</td>
+                        <td class="fw-bold stock-data-${code}">${formatNumber(val, 2)}</td>
+                    `;
+                };
+
+                // Foreign Buy (0-5)
+                html += buildBlock(0, true);
+                html += '<td class="border-0"></td>';
+                // Foreign Sell (7-12)
+                html += buildBlock(7, true);
+                html += '<td class="border-0"></td>';
+                // IT Buy (14-19)
+                html += buildBlock(14, false);
+                html += '<td class="border-0"></td>';
+                // IT Sell (21-26)
+                html += buildBlock(21, false);
+
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            document.getElementById(containerId).innerHTML = html;
+        }
+
+        function highlightStock(code) {
+            document.querySelectorAll(`.stock-data-${code}`).forEach(el => el.classList.add('hover-bg-yellow'));
+            document.querySelectorAll(`.stock-clickable[data-code="${code}"]`).forEach(el => {
+                el.style.boxShadow = "inset 0 0 0 2px #ffc107";
+            });
+        }
+
+        function removeHighlightStock(code) {
+            document.querySelectorAll(`.stock-data-${code}`).forEach(el => el.classList.remove('hover-bg-yellow'));
+            document.querySelectorAll(`.stock-clickable[data-code="${code}"]`).forEach(el => {
+                el.style.boxShadow = "";
+            });
+        }
+
+        function scrollToStock(code, currentEl) {
+            const nodes = Array.from(document.querySelectorAll(`.stock-clickable[data-code="${code}"]`));
+            if (nodes.length <= 1) return;
+
+            const currentIndex = nodes.indexOf(currentEl);
+            const nextIndex = (currentIndex + 1) % nodes.length;
+            const targetEl = nodes[nextIndex];
+
+            targetEl.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+
+            // Flash effect prominently in the center mapping to "鮮明黃色框"
+            const originalBg = targetEl.style.backgroundColor;
+            const originalColor = targetEl.style.color;
+            const originalBoxShadow = targetEl.style.boxShadow;
+            const originalZIndex = targetEl.style.zIndex;
+
+            targetEl.style.transition = 'all 0.3s ease';
+            targetEl.style.backgroundColor = '#ffff00';
+            targetEl.style.color = '#000000';
+            targetEl.style.boxShadow = '0 0 0 4px #ff0000, 0 0 20px 10px #ffff00';
+            targetEl.style.zIndex = '1000';
+            targetEl.style.position = 'relative';
+
+            setTimeout(() => {
+                targetEl.style.backgroundColor = originalBg;
+                targetEl.style.color = originalColor;
+                targetEl.style.boxShadow = originalBoxShadow;
+                targetEl.style.transition = 'background-color 0.2s';
+                targetEl.style.zIndex = originalZIndex;
+            }, 2000);
+        }
+    </script>
+</body>
+
+</html>

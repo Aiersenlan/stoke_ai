@@ -1,0 +1,15 @@
+# Environments
+test_agent_v2_env/
+env/
+venv/
+.env
+
+# Cache
+__pycache__/
+*.pyc
+
+# Data & results
+*.xlsx
+*.csv
+*.7z
+result.txt

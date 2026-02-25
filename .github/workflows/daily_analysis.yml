@@ -1,0 +1,48 @@
+name: Daily Stock Analysis
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  schedule:
+    # 台灣時間 16:00 大約為 UTC 08:00 (每月一到五執行)
+    - cron: '0 8 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  build_and_analyze:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Test API Fields (TWSE / TPEX)
+      run: |
+        python test_fields.py
+        
+    - name: Run AI Stock Analysis
+      env:
+        # 如果未來您的 analyze.py 中加入了 OpenAI 或 Gemini 等 API
+        # 請至 GitHub repo 中設定的 Secrets 中加入對應的金鑰，並取消註解：
+        # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} 
+        # GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        ACTION_RUN: 'true'
+      run: |
+        python analyze.py
+        
+    - name: Upload Excel Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: Daily-Stock-Report
+        path: "*.xlsx"
+        retention-days: 7
