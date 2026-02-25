@@ -173,7 +173,11 @@
                     <option value="shares">依股數排名</option>
                 </select>
                 <button id="downloadBtn" class="btn btn-outline-success fw-bold">⬇️ 下載 Excel</button>
-                <button id="fetchDataBtn" class="btn btn-danger fw-bold shadow">⚡ 取得最新台股資料</button>
+                <div class="input-group w-auto">
+                    <input type="date" id="fetchDateInput" class="form-control fw-bold border-danger shadow"
+                        title="如果要抓過去的資料請選擇日期" />
+                    <button id="fetchDataBtn" class="btn btn-danger fw-bold shadow">⚡ 取得台股資料</button>
+                </div>
                 <button id="refreshBtn" class="btn btn-primary fw-bold">🔄 重新整理</button>
             </div>
         </div>
@@ -265,22 +269,42 @@
                 }
             });
 
+            // Set today's date automatically on the fetch input
+            const todayDateObj = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
+            const todayStr = todayDateObj.getFullYear() + "-" +
+                String(todayDateObj.getMonth() + 1).padStart(2, '0') + "-" +
+                String(todayDateObj.getDate()).padStart(2, '0');
+            document.getElementById('fetchDateInput').value = todayStr;
+
             document.getElementById('fetchDataBtn').addEventListener('click', async () => {
                 const btn = document.getElementById('fetchDataBtn');
+                const targetDate = document.getElementById('fetchDateInput').value; // format YYYY-MM-DD
+
+                if (!targetDate) {
+                    alert('請選擇您要抓取的日期！');
+                    return;
+                }
+
                 const originalText = btn.innerHTML;
 
                 // Set loading status
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 正在連線台灣證交所...';
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 正在連線中...';
                 btn.disabled = true;
                 showLoading(true);
 
                 try {
-                    const res = await fetch('/trigger_analysis', { method: 'POST' });
+                    const res = await fetch('/trigger_analysis', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ date: targetDate })
+                    });
                     const result = await res.json();
 
                     if (res.ok) {
                         alert('✅ 成功：' + result.message + '\n畫面即將重新整理。');
                         loadAvailableDates(); // This will automatically load the newest file
+                        document.getElementById('dateSelect').value = targetDate.replace(/-/g, ''); // Try to select newly fetched date
+                        loadReport(targetDate.replace(/-/g, ''));
                     } else {
                         alert('❌ 錯誤：' + result.message);
                     }

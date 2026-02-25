@@ -201,10 +201,21 @@ def format_val(val):
     else:
         return f"{val/100000000:.2f}億元"
 
-def analyze():
-    print("Fetching data from TWSE and TPEX...")
-    twse_data = fetch_twse("20260223")
-    tpex_data = fetch_tpex("115/02/23")
+def analyze(target_date_str=None):
+    if not target_date_str:
+        target_date_str = datetime.now().strftime('%Y%m%d')
+        
+    year = int(target_date_str[:4])
+    month = target_date_str[4:6]
+    day = target_date_str[6:8]
+    roc_year = year - 1911
+    
+    twse_date = target_date_str
+    tpex_date = f"{roc_year:03d}/{month}/{day}"
+    
+    print(f"Fetching data from TWSE ({twse_date}) and TPEX ({tpex_date})...")
+    twse_data = fetch_twse(twse_date)
+    tpex_data = fetch_tpex(tpex_date)
     
     all_data = twse_data + tpex_data
     if not all_data:
@@ -296,7 +307,7 @@ def analyze():
         wb.remove(wb.active) # 移除預設工作表
         
         # 建立格式與字體
-        report_date = datetime.now().strftime('%Y/%m/%d')
+        report_date = f"{year}/{month}/{day}"
         
         light_red_fill = PatternFill(start_color="FFCCCC", end_color="FFCCCC", fill_type="solid")
         dark_red_fill = PatternFill(start_color="FF8080", end_color="FF8080", fill_type="solid")
@@ -438,11 +449,13 @@ def analyze():
             for c in ['G', 'N', 'U']:
                 ws.column_dimensions[c].width = 3
 
-        filename = f"market_analysis_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        filename = f"market_analysis_{target_date_str}.xlsx"
         wb.save(filename)
         print(f"\n已成功輸出多欄位變色 Excel 報表: {filename}")
     except Exception as e:
         print(f"\n輸出報表時發生錯誤: {e}")
 
 if __name__ == '__main__':
-    analyze()
+    import sys
+    target_date = sys.argv[1] if len(sys.argv) > 1 else None
+    analyze(target_date)

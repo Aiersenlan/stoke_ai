@@ -81,13 +81,28 @@ def trigger_analysis():
     # Execute analyze.py to generate new data
     try:
         import subprocess
-        print("Manual trigger activated: Running analyze.py...")
-        subprocess.check_call(["python", "analyze.py"])
+        
+        target_date = None
+        if request.is_json:
+            data = request.json or {}
+            target_date = data.get('date') # e.g. YYYY-MM-DD
+            
+        cmd = ["python", "analyze.py"]
+        if target_date:
+            target_date_str = target_date.replace("-", "")
+            cmd.append(target_date_str)
+            print(f"Manual trigger activated for date {target_date_str}...")
+        else:
+            print("Manual trigger activated for today...")
+            
+        subprocess.check_call(cmd)
         return jsonify({"status": "success", "message": "分析完成，新的報表已產出！"})
+    except subprocess.CalledProcessError as e:
+        return jsonify({"status": "error", "message": "分析失敗: 請確保該日期為交易日且有開盤資料。"}), 500
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({"status": "error", "message": f"分析失敗: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": f"系統錯誤: {str(e)}"}), 500
 
 if __name__ == '__main__':
     print("啟動網頁伺服器: http://localhost:5000")
