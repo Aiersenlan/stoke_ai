@@ -294,12 +294,22 @@
                 }
             });
 
-            // Set today's date automatically on the fetch input
-            const todayDateObj = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
-            const todayStr = todayDateObj.getFullYear() + "-" +
-                String(todayDateObj.getMonth() + 1).padStart(2, '0') + "-" +
-                String(todayDateObj.getDate()).padStart(2, '0');
-            document.getElementById('fetchDateInput').value = todayStr;
+            // Set expected date automatically on the fetch input (Last valid trading day)
+            const targetDateObj = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
+            // If before 3 PM, data usually not ready for today, shift to yesterday
+            if (targetDateObj.getHours() < 15) {
+                targetDateObj.setDate(targetDateObj.getDate() - 1);
+            }
+            // Skip weekends
+            if (targetDateObj.getDay() === 0) targetDateObj.setDate(targetDateObj.getDate() - 2); // Sun -> Fri
+            else if (targetDateObj.getDay() === 6) targetDateObj.setDate(targetDateObj.getDate() - 1); // Sat -> Fri
+
+            const targetDateStr = targetDateObj.getFullYear() + "-" +
+                String(targetDateObj.getMonth() + 1).padStart(2, '0') + "-" +
+                String(targetDateObj.getDate()).padStart(2, '0');
+            document.getElementById('fetchDateInput').value = targetDateStr;
+
+            window.hasAutoFetched = false;
 
             document.getElementById('fetchDataBtn').addEventListener('click', async () => {
                 const btn = document.getElementById('fetchDataBtn');
@@ -341,15 +351,19 @@
                     document.getElementById('debugLogOutput').textContent = result.debug_log || '無額外日誌資訊。';
 
                     if (res.ok) {
-                        setTimeout(async () => {
+                        let okTimer = setTimeout(async () => {
                             showLoading(false);
                             await loadAvailableDates();
-                            document.getElementById('dateSelect').value = targetDate.replace(/-/g, '');
-                            loadReport(targetDate.replace(/-/g, ''));
                         }, 600);
                     } else {
                         showLoading(false);
                         showError('❌ 錯誤：' + (result.message || '未知錯誤'));
+
+                        // Fallback to loading whatever data we have
+                        const select = document.getElementById('dateSelect');
+                        if (select.options.length > 0 && select.value) {
+                            loadReport(select.value || select.options[0].value);
+                        }
                     }
                 } catch (error) {
                     clearInterval(simInterval);
@@ -379,11 +393,27 @@
                         select.appendChild(option);
                     });
 
-                    // Trigger load for the newest
-                    loadReport(data.dates[0]);
+                    const expectedStrYYYYMMDD = document.getElementById('fetchDateInput').value.replace(/-/g, '');
+
+                    // Auto fetch logic if expected date not found
+                    if (!data.dates.includes(expectedStrYYYYMMDD) && !window.hasAutoFetched) {
+                        window.hasAutoFetched = true;
+                        console.log("Expected report not found. Auto-fetching...");
+                        document.getElementById('fetchDataBtn').click();
+                    } else {
+                        // Load expected date if found, otherwise latest available
+                        const dateToLoad = data.dates.includes(expectedStrYYYYMMDD) ? expectedStrYYYYMMDD : data.dates[0];
+                        select.value = dateToLoad;
+                        loadReport(dateToLoad);
+                    }
                 } else {
                     select.innerHTML = '<option value="">無可用報表</option>';
-                    showError('未找到任何報表檔案。請確定有先執行 analyze.py 產出檔案。');
+                    if (!window.hasAutoFetched) {
+                        window.hasAutoFetched = true;
+                        document.getElementById('fetchDataBtn').click();
+                    } else {
+                        showError('未找到任何報表檔案。請確定有先執行 analyze.py 產出檔案。');
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching dates:', error);
