@@ -76,6 +76,19 @@ def download(date_str):
         return send_file(filename, as_attachment=True)
     return 'File not found', 404
 
+@app.route('/trigger_analysis', methods=['POST'])
+def trigger_analysis():
+    # Execute analyze.py to generate new data
+    try:
+        import subprocess
+        print("Manual trigger activated: Running analyze.py...")
+        subprocess.check_call(["python", "analyze.py"])
+        return jsonify({"status": "success", "message": "分析完成，新的報表已產出！"})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": f"分析失敗: {str(e)}"}), 500
+
 if __name__ == '__main__':
     print("啟動網頁伺服器: http://localhost:5000")
     app.run(debug=True, port=5000)

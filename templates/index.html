@@ -173,6 +173,7 @@
                     <option value="shares">依股數排名</option>
                 </select>
                 <button id="downloadBtn" class="btn btn-outline-success fw-bold">⬇️ 下載 Excel</button>
+                <button id="fetchDataBtn" class="btn btn-danger fw-bold shadow">⚡ 取得最新台股資料</button>
                 <button id="refreshBtn" class="btn btn-primary fw-bold">🔄 重新整理</button>
             </div>
         </div>
@@ -261,6 +262,34 @@
                     window.location.href = `/download/${currentDate}`;
                 } else {
                     alert('請先選擇日期');
+                }
+            });
+
+            document.getElementById('fetchDataBtn').addEventListener('click', async () => {
+                const btn = document.getElementById('fetchDataBtn');
+                const originalText = btn.innerHTML;
+
+                // Set loading status
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 正在連線台灣證交所...';
+                btn.disabled = true;
+                showLoading(true);
+
+                try {
+                    const res = await fetch('/trigger_analysis', { method: 'POST' });
+                    const result = await res.json();
+
+                    if (res.ok) {
+                        alert('✅ 成功：' + result.message + '\n畫面即將重新整理。');
+                        loadAvailableDates(); // This will automatically load the newest file
+                    } else {
+                        alert('❌ 錯誤：' + result.message);
+                    }
+                } catch (error) {
+                    alert('發生錯誤，請稍後再試或是聯絡系統管理員。\n' + error);
+                } finally {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    showLoading(false);
                 }
             });
         });
