@@ -7,49 +7,120 @@
     <title>股票大戶動向</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        :root {
+            /* Dark mode (default) */
+            --app-bg: #0d0d0d;
+            --app-panel-bg: #161616;
+            --app-border: #333333;
+            --app-text: #dcdcdc;
+            --table-th-bg: #1f1f1f;
+            --table-sub-th-bg: #111111;
+            --table-border: #2b2b2b;
+            --legend-bg: rgba(0, 0, 0, 0.3);
+
+            --th-buy-bg: #5a1a1a;
+            --th-buy-border: #ff4d4d;
+            --th-buy-text: #ffcccc;
+
+            --th-sell-bg: #1a4a1a;
+            --th-sell-border: #4dff4d;
+            --th-sell-text: #ccffcc;
+
+            --bg-red-light: #3a1c1c;
+            --bg-red-light-text: #ff7b7b;
+            --bg-red-dark: #7b1a1a;
+            --bg-red-dark-text: #ffb3b3;
+
+            --bg-green-light: #1c3a1c;
+            --bg-green-light-text: #7bff7b;
+            --bg-green-dark: #1a6b1a;
+            --bg-green-dark-text: #b3ffb3;
+
+            --hover-bg-yellow: #3d3511;
+            --hover-text-yellow: #ffe600;
+        }
+
+        [data-bs-theme="light"] {
+            --app-bg: #f4f6f9;
+            --app-panel-bg: #ffffff;
+            --app-border: #dee2e6;
+            --app-text: #212529;
+            --table-th-bg: #e9ecef;
+            --table-sub-th-bg: #f8f9fa;
+            --table-border: #dee2e6;
+            --legend-bg: rgba(0, 0, 0, 0.05);
+
+            --th-buy-bg: #ffe6e6;
+            --th-buy-border: #dc3545;
+            --th-buy-text: #842029;
+
+            --th-sell-bg: #e6ffe6;
+            --th-sell-border: #198754;
+            --th-sell-text: #0f5132;
+
+            --bg-red-light: #f8d7da;
+            --bg-red-light-text: #842029;
+            --bg-red-dark: #f1aeb5;
+            --bg-red-dark-text: #58151c;
+
+            --bg-green-light: #d1e7dd;
+            --bg-green-light-text: #0f5132;
+            --bg-green-dark: #a3cfbb;
+            --bg-green-dark-text: #0a3622;
+
+            --hover-bg-yellow: #fff3cd;
+            --hover-text-yellow: #664d03;
+        }
+
         body {
             font-family: 'Inter', '微軟正黑體', sans-serif;
-            background-color: #0d0d0d;
-            color: #dcdcdc;
+            background-color: var(--app-bg);
+            color: var(--app-text);
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .table-wrapper {
             overflow-x: auto;
             margin-top: 20px;
-            background: #161616;
+            background: var(--app-panel-bg);
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid #333;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--app-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .table {
-            border-color: #333;
+            border-color: var(--table-border);
+            transition: color 0.3s, border-color 0.3s;
         }
 
         .table th {
-            background-color: #1f1f1f !important;
-            color: #f0f0f0 !important;
+            background-color: var(--table-th-bg) !important;
+            color: var(--app-text) !important;
             text-align: center;
             vertical-align: middle;
             white-space: nowrap;
-            border-bottom: 2px solid #555;
+            border-bottom: 2px solid var(--app-border);
             font-weight: 600;
             letter-spacing: 1px;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .table .sub-header th {
-            background-color: #111111 !important;
-            color: #aaaaaa !important;
+            background-color: var(--table-sub-th-bg) !important;
+            color: var(--app-text) !important;
             font-size: 0.9rem;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid var(--table-border);
         }
 
         .table td {
             text-align: right;
             vertical-align: middle;
             white-space: nowrap;
-            border-color: #2b2b2b;
+            border-color: var(--table-border);
+            color: var(--app-text);
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .table .text-center {
@@ -62,40 +133,40 @@
 
         /* Professional Stock Terminal Colors */
         .th-buy {
-            background-color: #5a1a1a !important;
-            border-bottom: 2px solid #ff4d4d !important;
-            color: #ffcccc !important;
+            background-color: var(--th-buy-bg) !important;
+            border-bottom: 2px solid var(--th-buy-border) !important;
+            color: var(--th-buy-text) !important;
         }
 
         .th-sell {
-            background-color: #1a4a1a !important;
-            border-bottom: 2px solid #4dff4d !important;
-            color: #ccffcc !important;
+            background-color: var(--th-sell-bg) !important;
+            border-bottom: 2px solid var(--th-sell-border) !important;
+            color: var(--th-sell-text) !important;
         }
 
         .bg-red-light {
-            background-color: #3a1c1c !important;
-            color: #ff7b7b !important;
+            background-color: var(--bg-red-light) !important;
+            color: var(--bg-red-light-text) !important;
         }
 
         .bg-red-dark {
-            background-color: #7b1a1a !important;
-            color: #ffb3b3 !important;
+            background-color: var(--bg-red-dark) !important;
+            color: var(--bg-red-dark-text) !important;
         }
 
         .bg-green-light {
-            background-color: #1c3a1c !important;
-            color: #7bff7b !important;
+            background-color: var(--bg-green-light) !important;
+            color: var(--bg-green-light-text) !important;
         }
 
         .bg-green-dark {
-            background-color: #1a6b1a !important;
-            color: #b3ffb3 !important;
+            background-color: var(--bg-green-dark) !important;
+            color: var(--bg-green-dark-text) !important;
         }
 
         .hover-bg-yellow {
-            background-color: #3d3511 !important;
-            color: #ffe600 !important;
+            background-color: var(--hover-bg-yellow) !important;
+            color: var(--hover-text-yellow) !important;
             transition: all 0.2s;
         }
 
@@ -115,10 +186,11 @@
         .header-section {
             margin-bottom: 20px;
             padding: 20px;
-            background: #161616;
+            background: var(--app-panel-bg);
             border-radius: 8px;
-            border: 1px solid #333;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--app-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         /* Custom Dark Scrollbar */
@@ -128,26 +200,29 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #0d0d0d;
+            background: var(--app-bg);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #444;
+            background: #666;
             border-radius: 5px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #666;
+            background: #888;
         }
 
         .nav-pills .nav-link {
-            color: #aaa;
+            color: var(--app-text);
+            opacity: 0.7;
+            transition: all 0.2s;
         }
 
         .nav-pills .nav-link.active {
-            background-color: #333;
-            color: #fff;
-            border-color: #555;
+            background-color: var(--table-th-bg);
+            color: var(--app-text);
+            border: 1px solid var(--app-border);
+            opacity: 1;
         }
 
         /* Compact Mode System */
@@ -156,8 +231,6 @@
         }
 
         body.compact-mode .main-th {
-            /* We will use a script toggle instead of CSS to fix colspan, 
-               but add some minimum widths */
             min-width: 80px;
         }
     </style>
@@ -166,63 +239,68 @@
 <body>
     <div class="container-fluid py-4">
         <div
-            class="header-section d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-3">
-            <h2 class="mb-0 text-light fw-bold flex-shrink-0 text-nowrap"
+            class="header-section d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3 mb-3">
+            <h2 class="mb-0 fw-bold flex-shrink-0 text-nowrap title-text"
                 style="letter-spacing: 1.5px; text-align: center;">📈 股票大戶動向</h2>
 
-            <div class="row gy-2 gx-3 align-items-center justify-content-center justify-content-xl-end m-0">
-                <div class="col-12 col-xl-auto d-flex align-items-center justify-content-center px-0">
-                    <label for="dateSelect" class="form-label mb-0 fw-bold me-2">選擇日期：</label>
-                    <select id="dateSelect" class="form-select w-auto text-center fw-bold shadow-sm border-primary">
-                        <option value="">載入中...</option>
-                    </select>
+            <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-end gap-3 w-100">
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+                    <div class="d-flex align-items-center">
+                        <label for="dateSelect" class="form-label mb-0 fw-bold me-2 text-nowrap">選擇日期：</label>
+                        <select id="dateSelect" class="form-select w-auto text-center fw-bold shadow-sm border-primary">
+                            <option value="">載入中...</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <label for="limitSelect" class="form-label mb-0 fw-bold me-2 text-nowrap">顯示：</label>
+                        <select id="limitSelect"
+                            class="form-select w-auto text-center fw-bold shadow-sm border-warning">
+                            <option value="35">前 35 名</option>
+                            <option value="all">顯示全部</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <label for="sortSelect" class="form-label mb-0 fw-bold me-2 text-nowrap">排序：</label>
+                        <select id="sortSelect" class="form-select w-auto text-center fw-bold shadow-sm border-info">
+                            <option value="val">依估價排名</option>
+                            <option value="shares">依股數排名</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-12 col-xl-auto d-flex align-items-center justify-content-center px-0">
-                    <label for="limitSelect" class="form-label mb-0 fw-bold me-2">顯示：</label>
-                    <select id="limitSelect" class="form-select w-auto text-center fw-bold shadow-sm border-warning">
-                        <option value="35">前 35 名</option>
-                        <option value="all">顯示全部</option>
-                    </select>
-                </div>
-                <div class="col-12 col-xl-auto d-flex align-items-center justify-content-center px-0">
-                    <label for="sortSelect" class="form-label mb-0 fw-bold me-2">排序：</label>
-                    <select id="sortSelect" class="form-select w-auto text-center fw-bold shadow-sm border-info">
-                        <option value="val">依估價排名</option>
-                        <option value="shares">依股數排名</option>
-                    </select>
-                </div>
-                <!-- 按鈕區 -->
-                <div
-                    class="col-12 col-xl-auto d-flex align-items-center justify-content-center gap-2 flex-wrap mt-2 mt-xl-0 px-0">
-                    <button id="toggleCompactBtn" class="btn btn-outline-warning fw-bold"
-                        onclick="toggleCompactMode()">👁️
-                        精簡模式</button>
-                    <button id="downloadBtn" class="btn btn-outline-success fw-bold">⬇️ 下載 Excel</button>
-                    <div class="input-group" style="width: auto;">
+
+                <div class="border-start border-secondary mx-1 d-none d-lg-block" style="height: 30px;"></div>
+
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mt-1 mt-lg-0">
+                    <button class="btn btn-outline-secondary fw-bold shadow" onclick="toggleTheme()" id="themeBtn"
+                        title="切換深淺色模式">☀️ 亮色模式</button>
+                    <button id="toggleCompactBtn" class="btn btn-outline-warning fw-bold shadow"
+                        onclick="toggleCompactMode()">👁️ 精簡模式</button>
+                    <button id="downloadBtn" class="btn btn-outline-success fw-bold shadow">⬇️ 下載 Excel</button>
+                    <div class="input-group drop-shadow" style="width: auto;">
                         <input type="date" id="fetchDateInput" class="form-control fw-bold border-danger shadow"
                             title="如果要抓過去的資料請選擇日期" />
                         <button id="fetchDataBtn" class="btn btn-danger fw-bold shadow">⚡ 取得台股資料</button>
                     </div>
-                    <button id="refreshBtn" class="btn btn-primary fw-bold">🔄 重新整理</button>
+                    <button id="refreshBtn" class="btn btn-primary fw-bold shadow">🔄 重新整理</button>
                 </div>
             </div>
         </div>
 
         <!-- Color Legend -->
-        <div class="mb-3 d-flex flex-wrap justify-content-center gap-3 text-light"
-            style="font-size: 0.9rem; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px;">
+        <div class="mb-3 d-flex flex-wrap justify-content-center gap-3"
+            style="font-size: 0.9rem; background: var(--legend-bg); padding: 8px; border-radius: 8px;">
             <div class="d-flex align-items-center"><span class="badge border border-secondary me-2 p-0"
-                    style="background-color: #FF8080; width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
-                    class="text-secondary fw-bold">同向買(賣)超且股數較 <span class="text-danger">大</span> (深紅)</span></div>
+                    style="background-color: var(--bg-red-dark); width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
+                    class="fw-bold">同向買(賣)超且股數較 <span class="text-danger">大</span> (深紅)</span></div>
             <div class="d-flex align-items-center"><span class="badge border border-secondary me-2 p-0"
-                    style="background-color: #FFCCCC; width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
-                    class="text-secondary fw-bold">同向買(賣)超且股數較 <span class="text-danger">小</span> (淺紅)</span></div>
+                    style="background-color: var(--bg-red-light); width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
+                    class="fw-bold">同向買(賣)超且股數較 <span class="text-danger">小</span> (淺紅)</span></div>
             <div class="d-flex align-items-center ms-md-3"><span class="badge border border-secondary me-2 p-0"
-                    style="background-color: #80FF80; width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
-                    class="text-secondary fw-bold">雙方對作且股數較 <span style="color: #66cc66;">大</span> (深綠)</span></div>
+                    style="background-color: var(--bg-green-dark); width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
+                    class="fw-bold">雙方對作且股數較 <span style="color: #198754;">大</span> (深綠)</span></div>
             <div class="d-flex align-items-center"><span class="badge border border-secondary me-2 p-0"
-                    style="background-color: #E6FFE6; width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
-                    class="text-secondary fw-bold">雙方對作且股數較 <span style="color: #66cc66;">小</span> (淺綠)</span></div>
+                    style="background-color: var(--bg-green-light); width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
+                    class="fw-bold">雙方對作且股數較 <span style="color: #198754;">小</span> (淺綠)</span></div>
         </div>
 
         <ul class="nav nav-pills mb-3 gap-2" id="marketTabs" role="tablist">
@@ -668,7 +746,7 @@
                 sortedRows.push(newRow);
             }
 
-            let html = '<table class="table table-bordered table-dark table-hover table-sm align-middle">';
+            let html = '<table class="table table-bordered table-hover table-sm align-middle">';
 
             // Main Headers
             html += '<thead><tr>';
@@ -808,6 +886,21 @@
             document.querySelectorAll('.main-th').forEach(th => {
                 th.setAttribute('colspan', isCompact ? '3' : '7');
             });
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const htmlNode = document.documentElement;
+            const currentTheme = htmlNode.getAttribute('data-bs-theme');
+            const themeBtn = document.getElementById('themeBtn');
+
+            if (currentTheme === 'dark') {
+                htmlNode.setAttribute('data-bs-theme', 'light');
+                themeBtn.innerHTML = '🌙 黑暗模式';
+            } else {
+                htmlNode.setAttribute('data-bs-theme', 'dark');
+                themeBtn.innerHTML = '☀️ 亮色模式';
+            }
         }
     </script>
 </body>
