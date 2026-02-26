@@ -149,6 +149,11 @@
             color: #fff;
             border-color: #555;
         }
+
+        /* Compact Mode System */
+        body.compact-mode .col-extra {
+            display: none;
+        }
     </style>
 </head>
 
@@ -173,6 +178,8 @@
                     <option value="val">依估價排名</option>
                     <option value="shares">依股數排名</option>
                 </select>
+                <button id="toggleCompactBtn" class="btn btn-outline-warning fw-bold" onclick="toggleCompactMode()">👁️
+                    精簡模式</button>
                 <button id="downloadBtn" class="btn btn-outline-success fw-bold">⬇️ 下載 Excel</button>
                 <div class="input-group w-auto">
                     <input type="date" id="fetchDateInput" class="form-control fw-bold border-danger shadow"
@@ -660,10 +667,10 @@
                     <th>排名</th>
                     <th>${sub[0]}</th>
                     <th>${sub[1]}</th>
-                    <th>${sub[2]}</th>
-                    <th>${sub[3]}</th>
-                    <th>${sub[4]}</th>
-                    <th>${sub[5]}</th>
+                    <th class="col-extra">${sub[2]}</th>
+                    <th class="col-extra">${sub[3]}</th>
+                    <th class="col-extra">${sub[4]}</th>
+                    <th class="col-extra">${sub[5]}</th>
                 `;
                 if (i < 3) html += '<th class="border-0 bg-transparent px-1"></th>';
             }
@@ -684,7 +691,7 @@
                     const val = row[startIndex + 5];
 
                     if (code === '') {
-                        return `<td></td><td></td><td></td><td></td><td></td><td></td><td></td>`;
+                        return `<td></td><td></td><td></td><td class="col-extra"></td><td class="col-extra"></td><td class="col-extra"></td><td class="col-extra"></td>`;
                     }
 
                     const fillClass = getFillClass(code, isForeign);
@@ -693,10 +700,10 @@
                         <td class="text-center text-secondary font-monospace fw-bold">${rank}</td>
                         <td class="text-center font-monospace">${code}</td>
                         <td class="text-center fw-bold stock-clickable ${fillClass}" data-code="${code}" onclick="scrollToStock('${code}', this)" onmouseover="highlightStock('${code}')" onmouseout="removeHighlightStock('${code}')" title="點擊跳轉到另一個買賣超區域">${name}</td>
-                        <td class="stock-data-${code}">${formatNumber(price, 2)}</td>
-                        <td class="stock-data-${code}">${formatNumber(vwap, 2)}</td>
-                        <td class="stock-data-${code}">${formatNumber(shares, 0)}</td>
-                        <td class="fw-bold stock-data-${code}">${formatNumber(val, 2)}</td>
+                        <td class="stock-data-${code} col-extra">${formatNumber(price, 2)}</td>
+                        <td class="stock-data-${code} col-extra">${formatNumber(vwap, 2)}</td>
+                        <td class="stock-data-${code} col-extra">${formatNumber(shares, 0)}</td>
+                        <td class="fw-bold stock-data-${code} col-extra">${formatNumber(val, 2)}</td>
                     `;
                 };
 
@@ -764,7 +771,21 @@
                 targetEl.style.zIndex = originalZIndex;
             }, 2000);
         }
+
+        // Compact Mode Toggle
+        function toggleCompactMode() {
+            document.body.classList.toggle('compact-mode');
+            const btn = document.getElementById('toggleCompactBtn');
+            if (document.body.classList.contains('compact-mode')) {
+                btn.innerHTML = '👁️ 展開完整資料';
+                btn.classList.replace('btn-outline-warning', 'btn-warning');
+            } else {
+                btn.innerHTML = '👁️ 精簡模式';
+                btn.classList.replace('btn-warning', 'btn-outline-warning');
+            }
+        }
     </script>
 </body>
 
 </html>
+```
