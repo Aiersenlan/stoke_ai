@@ -21,11 +21,18 @@ def authenticate():
 
 @app.before_request
 def require_login():
+    # Allow health check to pass without auth to help keep-alive services
+    if request.path == '/health':
+        return
     # Only enforce if USE_AUTH is true
     if USE_AUTH:
         auth = request.authorization
         if not auth or not check_auth(auth.username, auth.password):
             return authenticate()
+
+@app.route('/health')
+def health():
+    return "OK", 200
 
 # Ensure the template directory exists
 os.makedirs('templates', exist_ok=True)

@@ -14,6 +14,6 @@ jobs:
     steps:
       - name: 戳一下您的 Render 網站 (Wake up call)
         run: |
-          echo "正在呼叫您的網站： https://institutional-tracker.onrender.com"
+          echo "正在呼叫您的網站： https://institutional-tracker.onrender.com/health"
           # -s 是安靜模式， -I 是只抓取標頭(Headers)，這對喚醒主機來說就足夠了，可以省流量
-          curl -s -I "https://institutional-tracker.onrender.com"
+          curl -s -I "https://institutional-tracker.onrender.com/health"
