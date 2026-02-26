@@ -1,6 +1,6 @@
 # 股票大戶動向（買賣超）
 
-👉 **線上觀賞網址 (Live Demo)**: [https://stoke-ai-web.onrender.com](https://stoke-ai-web.onrender.com)
+👉 **線上觀賞網址 (Live Demo)**: [https://institutional-tracker-web.onrender.com](https://institutional-tracker-web.onrender.com)
 *(若您後來在 Render 更換了網址名稱，請將上方連結替換為您的新網址)*
 
 ## 系統概述

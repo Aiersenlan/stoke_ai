@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: stoke-ai-web
+    name: institutional-tracker-web
     env: python
     region: frankfurt
     plan: free
