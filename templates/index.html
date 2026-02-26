@@ -169,30 +169,41 @@
             class="header-section d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
             <h2 class="mb-0 text-light fw-bold" style="letter-spacing: 1.5px; text-align: center;">📈 當日大戶動向（買賣超）</h2>
 
-            <div class="d-flex align-items-center gap-2 flex-wrap justify-content-center justify-content-md-end">
-                <label for="dateSelect" class="form-label mb-0 fw-bold">選擇日期：</label>
-                <select id="dateSelect" class="form-select w-auto text-center fw-bold shadow-sm border-primary">
-                    <option value="">載入中...</option>
-                </select>
-                <label for="limitSelect" class="form-label mb-0 fw-bold ms-2">顯示：</label>
-                <select id="limitSelect" class="form-select w-auto text-center fw-bold shadow-sm border-warning">
-                    <option value="35">前 35 名</option>
-                    <option value="all">顯示全部</option>
-                </select>
-                <label for="sortSelect" class="form-label mb-0 fw-bold ms-2">排序：</label>
-                <select id="sortSelect" class="form-select w-auto text-center fw-bold shadow-sm border-info">
-                    <option value="val">依估價排名</option>
-                    <option value="shares">依股數排名</option>
-                </select>
-                <button id="toggleCompactBtn" class="btn btn-outline-warning fw-bold" onclick="toggleCompactMode()">👁️
-                    精簡模式</button>
-                <button id="downloadBtn" class="btn btn-outline-success fw-bold">⬇️ 下載 Excel</button>
-                <div class="input-group w-auto">
-                    <input type="date" id="fetchDateInput" class="form-control fw-bold border-danger shadow"
-                        title="如果要抓過去的資料請選擇日期" />
-                    <button id="fetchDataBtn" class="btn btn-danger fw-bold shadow">⚡ 取得台股資料</button>
+            <div class="row gy-2 gx-3 align-items-center justify-content-center justify-content-md-end w-100 m-0">
+                <div class="col-12 col-md-auto d-flex align-items-center justify-content-center px-0">
+                    <label for="dateSelect" class="form-label mb-0 fw-bold me-2">選擇日期：</label>
+                    <select id="dateSelect" class="form-select w-auto text-center fw-bold shadow-sm border-primary">
+                        <option value="">載入中...</option>
+                    </select>
                 </div>
-                <button id="refreshBtn" class="btn btn-primary fw-bold">🔄 重新整理</button>
+                <div class="col-12 col-md-auto d-flex align-items-center justify-content-center px-0">
+                    <label for="limitSelect" class="form-label mb-0 fw-bold me-2">顯示：</label>
+                    <select id="limitSelect" class="form-select w-auto text-center fw-bold shadow-sm border-warning">
+                        <option value="35">前 35 名</option>
+                        <option value="all">顯示全部</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-auto d-flex align-items-center justify-content-center px-0">
+                    <label for="sortSelect" class="form-label mb-0 fw-bold me-2">排序：</label>
+                    <select id="sortSelect" class="form-select w-auto text-center fw-bold shadow-sm border-info">
+                        <option value="val">依估價排名</option>
+                        <option value="shares">依股數排名</option>
+                    </select>
+                </div>
+                <!-- 按鈕區 -->
+                <div
+                    class="col-12 col-md-auto d-flex align-items-center justify-content-center gap-2 flex-wrap mt-2 mt-md-0 px-0">
+                    <button id="toggleCompactBtn" class="btn btn-outline-warning fw-bold"
+                        onclick="toggleCompactMode()">👁️
+                        精簡模式</button>
+                    <button id="downloadBtn" class="btn btn-outline-success fw-bold">⬇️ 下載 Excel</button>
+                    <div class="input-group" style="width: auto;">
+                        <input type="date" id="fetchDateInput" class="form-control fw-bold border-danger shadow"
+                            title="如果要抓過去的資料請選擇日期" />
+                        <button id="fetchDataBtn" class="btn btn-danger fw-bold shadow">⚡ 取得台股資料</button>
+                    </div>
+                    <button id="refreshBtn" class="btn btn-primary fw-bold">🔄 重新整理</button>
+                </div>
             </div>
         </div>
 
