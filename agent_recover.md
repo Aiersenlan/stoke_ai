@@ -36,6 +36,9 @@ This document is specifically formulated for AI Agent ingestion. Reading this do
 
 ### B. Web Backend (`app.py`)
 *   **Role**: Flask application to serve the frontend and provide API endpoints to the generated reports.
+*   **Security (Basic Authentication)**:
+    *   Reads environment variables `USE_AUTH` (boolean string), `AUTH_USER`, and `AUTH_PASS`.
+    *   If `USE_AUTH` is true, an `@app.before_request` hook validates the `Authorization` header. If missing or incorrect, it returns a 401 response with `WWW-Authenticate: Basic realm="VIP Login Required"`.
 *   **Endpoints**:
     *   `GET /`: Serves `templates/index.html`.
     *   `GET /get_available_dates`: Scans local directory for `market_analysis_*.xlsx` files, extracts dates, and returns them as a sorted JSON array (newest first).
@@ -46,13 +49,15 @@ This document is specifically formulated for AI Agent ingestion. Reading this do
 ### C. Web Frontend (`templates/index.html`)
 *   **Visual Identity**: Professional Trading Terminal concept. Uses `data-bs-theme="dark"`.
 *   **DOM Structure**:
-    *   **Header**: Flex-wrap enabled for mobile responsiveness. Contains Date Selector (`select`), Limit Selector (Top 35 vs All), Sort Rule (Valuation vs Shares), Download button, Date Picker for manual fetching, Manual Fetch button ("⚡ 取得台股資料"), and Refresh button.
+    *   **Header**: Flex-wrap enabled for mobile responsiveness using Bootstrap's grid system (`row`, `col-12`, `col-md-auto`). Contains Date Selector, Limit Selector (Top 35 vs All), Sort Rule (Valuation vs Shares), Compact Mode toggle ("👁️ 精簡模式"), Download button, Date Picker for manual fetching, Manual Fetch button ("⚡ 取得台股資料"), and Refresh button.
+    *   **Color Legend**: A visual guide explaining the meaning of the four highlighting hues (Deep Red, Light Red, Deep Green, Light Green).
     *   **Tabs**: Bootstrap Nav-pills toggling "上市" (TWSE) and "上櫃" (TPEX) container views.
-    *   **Data Containers**: Holds the respective tables, loading spinners, and progress bars.
+    *   **Data Containers**: Holds the respective tables, loading spinners, and progress bars. The table structure enforces 7 columns per block (Rank, Ticker, Name, Price, VWAP, Shares, Value).
     *   **Footer**: Contains GitHub Repository redirect (`institutional-tracker`) and Debug Log toggle.
 *   **State & Interactivity**:
     *   **Auto-Fetch Logic**: On load, if the expected latest valid trading date (excluding weekends, and shifting to yesterday if current time < 15:00 Taipei time) is missing from available reports, automatically trigger the Fetch Data logic.
     *   **Loading UX**: Simulated progress bar (`setInterval`) displayed while waiting for `fetch('/trigger_analysis')`.
+    *   **Compact Mode (`toggleCompactMode`)**: Toggles a `compact-mode` CSS class on `body` to hide price, VWAP, shares, and valuation columns for a streamlined view, automatically adjusting main header `colspans` from 7 to 3 to prevent layout breaking.
     *   **Table Replication**: Frontend must reconstruct the highlighting logic native to the backend (Red/Green hues).
     *   **Hover/Focus Sync**: Mousing over a stock name highlights the entire associated data blocks (same stock ticker across Foreign and IT sections) in striking yellow (`#ffe600` on `#3d3511`).
     *   **Click-to-Scroll**: Clicking a stock name smoothly scrolls the viewport to its counterpart on the opposing grid and triggers a 2-second CSS animation flash (Yellow/Red border) for rapid visual correlation.

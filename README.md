@@ -21,8 +21,11 @@ Institutional Tracker 是一款專為台灣證券市場（TWSE/TPEX）設計的�
   基於 `requests` 重構底層網路連線層，深度偽裝 HTTP Headers（含 `Referer` 與進階 `User-Agent` 指紋），具備高可用性，精準繞過台灣櫃買中心 (TPEX) 的 403 阻擋機制。
   
 - **交易終端機視覺化 (Trading Terminal UI)**
-  採用 Dark Mode 介面設計，實現「法人同向/對作」資金矩陣之色彩標註機制。內建動態游標連動高亮 (Hover Sync) 與跨板塊平滑導航 (Click-to-Scroll) 功能，達到所見即所得之分析體驗。
-  
+  採用 Dark Mode 介面設計，實現「法人同向/對作」資金矩陣之色彩標註機制。內建動態游標連動高亮 (Hover Sync)、跨板塊平滑導航 (Click-to-Scroll)，並新增直覺的「排名欄位」與「精簡模式 (Compact Mode)」，提供極致的高效率看盤與分析體驗。
+
+- **環境變數私密化防護 (Basic Authentication)**
+  內建輕量級密碼保護機制，透過定義 `USE_AUTH`、`AUTH_USER`、`AUTH_PASS` 環境變數，即可瞬間將雲端部署之站點轉為私人專屬的 VIP 包廂，隔絕未授權存取。
+
 - **無人值守自動化 (Automated Pipeline)**
   前端具備「懶人全自動抓取 (Auto-Fetch)」邏輯，自動推算開盤日補齊回看數據。後台內建 GitHub Actions 腳本 (`daily_analysis.yml`)，支援每日盤後排程執行。
   
@@ -59,11 +62,7 @@ python app.py
 ## 開發與貢獻 (Development & Agents)
 針對 AI 代碼代理人 (AI Coding Agents) 或二次開發者，核心商業邏輯與規避策略之還原規格，請參閱 [Agent Recovery Specification](agent_recover.md)。
 
-### 貢獻者 (Contributors)
-感謝為此專案帶來卓越建樹的貢獻者！  
-<a href="https://github.com/Aiersenlan/institutional-tracker/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Aiersenlan/institutional-tracker" />
-</a>
+
 
 ## 授權 (License)
 本專案為開源軟體，僅供學術與技術交流使用，投資風險請自行評估。
