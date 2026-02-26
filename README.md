@@ -1,4 +1,7 @@
-# 股票大戶動向（買賣超）終端機 - 系統開發需求規格書 (PRD)
+# 股票大戶動向（買賣超）
+
+👉 **線上觀賞網址 (Live Demo)**: [https://stoke-ai-web.onrender.com](https://stoke-ai-web.onrender.com)
+*(若您後來在 Render 更換了網址名稱，請將上方連結替換為您的新網址)*
 
 ## 系統概述
 本專案包含一個 Python 爬蟲與資料分析腳本 (`analyze.py`)，以及一個輕量級的 Flask 網頁應用程式供資料視覺化 (`app.py` 及 `templates/index.html`)。目標是從台灣證券交易所與櫃買中心獲取每日的三大法人買賣超資料與收盤行情，進行資料整理、計算估價後，產出經過排版與顏色標註的 Excel 報表，並透過網頁提供專業看盤終端機（Trading Terminal）風格的互動式介面。
