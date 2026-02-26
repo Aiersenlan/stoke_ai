@@ -16,7 +16,8 @@ headers = {
 def get_json(url):
     try:
         session = requests.Session()
-        res = session.get(url, headers=headers, timeout=15)
+        # Disable SSL verification to prevent "CERTIFICATE VERIFY FAILED" on some Linux/Docker environments like Render
+        res = session.get(url, headers=headers, timeout=15, verify=False)
         # Check HTTP response status and throw if not 200
         res.raise_for_status()
         return res.json()
