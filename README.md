@@ -3,12 +3,16 @@
 ## 系統概述
 本專案包含一個 Python 爬蟲與資料分析腳本 (`analyze.py`)，以及一個輕量級的 Flask 網頁應用程式供資料視覺化 (`app.py` 及 `templates/index.html`)。目標是從台灣證券交易所與櫃買中心獲取每日的三大法人買賣超資料與收盤行情，進行資料整理、計算估價後，產出經過排版與顏色標註的 Excel 報表，並透過網頁提供專業看盤終端機（Trading Terminal）風格的互動式介面。
 
+本系統已支援雲端部署 (如 Render)，並具備自動規避伺服器防火牆 (WAF)、自動抓取最新交易日資料與完整的除錯日誌介面。
+
 ## 1. 後端資料爬取與分析 (`analyze.py`)
-### 1.1 資料源網址規則
-- **上市買賣超 (TWSE T86)**: `https://www.twse.com.tw/rwd/zh/fund/T86?response=json&selectType=ALL&date={date}`
+### 1.1 資料源網址與反爬蟲機制突破
+- **上市買賣超 (TWSE T86)**: `https://www.twse.com.tw/fund/T86?response=json&date={date}&selectType=ALL`
 - **上櫃買賣超 (TPEX)**: `https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&se=EW&t=D&d={tpex_date}` （注意：tpex_date 為民國年格式，如 115/02/24）
-- **上市收盤價 (TWSE MI_INDEX)**: `https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?response=json&type=ALL&date={date}`
+- **上市收盤價 (TWSE MI_INDEX)**: `https://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&date={date}&type=ALLBUT0999`
 - **上櫃收盤價 (TPEX)**: `https://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_result.php?l=zh-tw&d={tpex_date}`
+- **防護繞過 (WAF Bypass)**: 由於 TPEX 在雲端主機會阻擋非瀏覽器請求 (403 Forbidden)，爬蟲底層改用 `requests` 函式庫，並帶入完整的 `User-Agent`、`Accept` 及 `Referer: https://www.tpex.org.tw/` 標頭以模擬真實使用者行為。
+- 支援命令列參數直接傳入目標日期進行歷史資料抓取：`python analyze.py YYYYMMDD`。
 
 ### 1.2 資料過濾與欄位處理
 1. 取得每日交易資料後，**排除 ETF 與權證** (邏輯：股號長度大於 4，或是首字不為數字者，皆跳過)。
@@ -39,35 +43,38 @@
 
 ## 2. Web 伺服器 (`app.py`)
 - 使用 `Flask` 及 `pandas` 處理與提供後端資料。
--路由規則：
+- 路由規則：
    - `/`: 渲染 `index.html`。
    - `/get_available_dates`: 掃描目錄尋找 `market_analysis_YYYYMMDD.xlsx`，以陣列回傳排序後的可用日期。
    - `/get_report/<date>`: 用 pandas (`pd.read_excel(..., header=None)`) 讀取 Excel 檔所有 Sheet，去除空行後重新包裝為包含 `main_headers`, `sub_headers`, `data` 的 JSON。
    - `/download/<date>`: 提供 Excel 檔案本機端直接下載。
+   - `/trigger_analysis` (POST): 接收指定的目標日期 (`date`)，並透過 `subprocess.run` 執行 `analyze.py {date}`，並將 Python 的 `stdout` 與 `stderr` 收集整合為 `debug_log` 回傳前端使用。
 
 ## 3. 前端看盤終端機 (`templates/index.html`)
 ### 3.1 整體視覺風格 (Dark Mode Trading Terminal)
-- HTML 掛載 `data-bs-theme="dark"`。
+- HTML 掛載 `data-bs-theme="dark"`，支援手機版 RWD (`flex-wrap`)。
 - 背景改為專業深色系 (`#0d0d0d`, `#161616`)，隱藏原生捲軸並實作深灰色細捲軸。
 - 表格最上層區塊標題套用特別設計：
    - `買超` 區塊標題：暗紅茶色 (#5a1a1a) ＋ 亮紅底線。
    - `賣超` 區塊標題：暗青綠色 (#1a4a1a) ＋ 亮綠底線。
-- 大標題顯示：「📈 當日大戶動向（買賣超）」。
+- 頁尾包含專案 GitHub 連結 (`institutional-tracker`) 與執行日誌開關。
 
-### 3.2 頂部控制列
-- 包含四種互動介面：
+### 3.2 頂部控制列與自動爬取機制
+- 包含五種互動介面：
    1. **選擇日期** (動態載入)。
    2. **顯示筆數** (`前 35 名`、`全部顯示`)。
    3. **排序方式** (`依估價排名`、`依股數排名`)。
-   4. **操作按鈕** (`⬇️ 下載 Excel`, `🔄 重新整理`)。
+   4. **目標抓取日期與按鈕** (`⚡ 取得台股資料`，可自訂抓取過去沒抓過的歷史資料)。
+   5. **操作按鈕** (`⬇️ 下載 Excel`, `🔄 重新整理`)。
+- **懶人全自動抓取 (Auto-Fetch)**：進版時如果預期中的「最新開盤日」(自動閃避週末並根據下午三點跨日) 沒有被抓取過，便會強制自動點擊抓取按鈕進行獲取。
 
 ### 3.3 互動效果與動態渲染 (JavaScript)
 - **同向/對作著色邏輯**: 
-   切片 (`slice`) 資料前，必須先蒐集該板塊內所有存在的股票資訊，還原出與 Excel 完全相同的紅綠渲染邏輯（見 1.3）。確認此筆資料沒有因為過濾 35 筆而在畫面上找不到其對作方（若畫面另一方已被裁切使得資料內無法讀取，則此股呈現無顏色著色，達到「所見即所得」）。
+   切片 (`slice`) 資料前，必須先蒐集該板塊內所有存在的股票資訊，還原出與 Excel 完全相同的紅綠渲染邏輯。確認此筆資料沒有因為過濾限制而在畫面上找不到其對作方。
 - **滑鼠懸停 (Hover) 標記**: 移至名稱顯示 `🔍`。全表同樣代號的收盤/均/股數/估價格子底色瞬間同步改變為深黃高亮 (`#3d3511` / 金黃文字 `#ffe600`)。
-- **一鍵瞬間移動 (Click to Scroll)**: 點擊股名時，呼叫 `scrollIntoView(center)` 平滑跳轉至該股在其他買賣區塊的位置，並加上視覺化導引（目標背景閃爍純黃色 `#ffff00`、黑字、紅邊框 `#ff0000` 長達 2 秒）。
-- **回到頂端 (Back to Top)**: 下滑超過 300px 時浮現右下角 `⬆️` 按鈕。
+- **一鍵瞬間移動 (Click to Scroll)**: 點擊股名時，平滑跳轉至該股在其他買賣區塊的位置，並加上視覺化導引（目標背景閃爍純黃色 `#ffff00`、黑字、紅邊框 `#ff0000` 長達 2 秒）。
+- **進度模擬與日誌系統**: 點擊資料抓取時，畫面顯示動態進度條。程式執行完畢後會將 `app.py` 傳回的 `stdout` 呈現在隱藏式黑底黑盒子的 `⚙️ 執行日誌 (Debug Console)` 中，方便排查 403 被擋或是錯誤。
 
 ---
-**提示與驗證目標**：
-請另外建立一個獨立資料夾供測試，代理 Agent 需能完全只透過此份 md 建立出 `analyze_test.py`, `app_test.py` 與 `templates/index.html` 並確保執行結果與原專案吻合。
+**環境佈署需求與工具**：
+本專案環境可由 `pip install -r requirements.txt` 建立（包含 `flask`, `pandas`, `openpyxl`, `requests`, `gunicorn`），並附有 `.github/workflows/daily_analysis.yml` 以利 GitHub Actions 每日自動排程產出報表，以及 `render.yaml` 支援雲端一鍵部屬。
