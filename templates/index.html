@@ -183,6 +183,23 @@
             </div>
         </div>
 
+        <!-- Color Legend -->
+        <div class="mb-3 d-flex flex-wrap justify-content-center gap-3 text-light"
+            style="font-size: 0.9rem; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px;">
+            <div class="d-flex align-items-center"><span class="badge border border-secondary me-2 p-0"
+                    style="background-color: #FF8080; width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
+                    class="text-secondary fw-bold">同向買(賣)超且股數較 <span class="text-danger">大</span> (深紅)</span></div>
+            <div class="d-flex align-items-center"><span class="badge border border-secondary me-2 p-0"
+                    style="background-color: #FFCCCC; width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
+                    class="text-secondary fw-bold">同向買(賣)超且股數較 <span class="text-danger">小</span> (淺紅)</span></div>
+            <div class="d-flex align-items-center ms-md-3"><span class="badge border border-secondary me-2 p-0"
+                    style="background-color: #80FF80; width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
+                    class="text-secondary fw-bold">雙方對作且股數較 <span style="color: #66cc66;">大</span> (深綠)</span></div>
+            <div class="d-flex align-items-center"><span class="badge border border-secondary me-2 p-0"
+                    style="background-color: #E6FFE6; width: 16px; height: 16px; display: inline-block;">&nbsp;</span><span
+                    class="text-secondary fw-bold">雙方對作且股數較 <span style="color: #66cc66;">小</span> (淺綠)</span></div>
+        </div>
+
         <ul class="nav nav-pills mb-3 gap-2" id="marketTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active fw-bold fs-5 px-4" id="twse-tab" data-bs-toggle="tab"
@@ -630,16 +647,17 @@
 
             // Main Headers
             html += '<thead><tr>';
-            html += `<th colspan="6" class="fs-5 shadow-sm th-buy">外資買超</th><th class="border-0 bg-transparent"></th>`;
-            html += `<th colspan="6" class="fs-5 shadow-sm th-sell">外資賣超</th><th class="border-0 bg-transparent"></th>`;
-            html += `<th colspan="6" class="fs-5 shadow-sm th-buy">投信買超</th><th class="border-0 bg-transparent"></th>`;
-            html += `<th colspan="6" class="fs-5 shadow-sm th-sell">投信賣超</th>`;
+            html += `<th colspan="7" class="fs-5 shadow-sm th-buy">外資買超</th><th class="border-0 bg-transparent"></th>`;
+            html += `<th colspan="7" class="fs-5 shadow-sm th-sell">外資賣超</th><th class="border-0 bg-transparent"></th>`;
+            html += `<th colspan="7" class="fs-5 shadow-sm th-buy">投信買超</th><th class="border-0 bg-transparent"></th>`;
+            html += `<th colspan="7" class="fs-5 shadow-sm th-sell">投信賣超</th>`;
             html += '</tr><tr class="sub-header">';
 
             // Sub Headers
             const sub = sheetData.sub_headers;
             for (let i = 0; i < 4; i++) {
                 html += `
+                    <th>排名</th>
                     <th>${sub[0]}</th>
                     <th>${sub[1]}</th>
                     <th>${sub[2]}</th>
@@ -652,8 +670,9 @@
             html += '</tr></thead><tbody>';
 
             // Data Rows
-            sortedRows.forEach(row => {
+            sortedRows.forEach((row, index) => {
                 html += '<tr>';
+                const rank = index + 1;
 
                 // Block builder
                 const buildBlock = (startIndex, isForeign) => {
@@ -665,12 +684,13 @@
                     const val = row[startIndex + 5];
 
                     if (code === '') {
-                        return `<td></td><td></td><td></td><td></td><td></td><td></td>`;
+                        return `<td></td><td></td><td></td><td></td><td></td><td></td><td></td>`;
                     }
 
                     const fillClass = getFillClass(code, isForeign);
 
                     return `
+                        <td class="text-center text-secondary font-monospace fw-bold">${rank}</td>
                         <td class="text-center font-monospace">${code}</td>
                         <td class="text-center fw-bold stock-clickable ${fillClass}" data-code="${code}" onclick="scrollToStock('${code}', this)" onmouseover="highlightStock('${code}')" onmouseout="removeHighlightStock('${code}')" title="點擊跳轉到另一個買賣超區域">${name}</td>
                         <td class="stock-data-${code}">${formatNumber(price, 2)}</td>
