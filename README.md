@@ -59,5 +59,11 @@ python app.py
 ## 開發與貢獻 (Development & Agents)
 針對 AI 代碼代理人 (AI Coding Agents) 或二次開發者，核心商業邏輯與規避策略之還原規格，請參閱 [Agent Recovery Specification](agent_recover.md)。
 
+### 貢獻者 (Contributors)
+感謝為此專案帶來卓越建樹的貢獻者！  
+<a href="https://github.com/Aiersenlan/institutional-tracker/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Aiersenlan/institutional-tracker" />
+</a>
+
 ## 授權 (License)
 本專案為開源軟體，僅供學術與技術交流使用，投資風險請自行評估。
