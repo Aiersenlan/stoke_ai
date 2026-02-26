@@ -4,7 +4,7 @@
 [![Flask](https://img.shields.io/badge/flask-app-green.svg)](#)
 [![Deployment](https://img.shields.io/badge/deployment-render-purple.svg)](#)
 
-👉 **Live Demo**: [https://institutional-tracker-web.onrender.com](https://institutional-tracker-web.onrender.com)
+👉 **Live Demo**: [https://institutional-tracker.onrender.com](https://institutional-tracker.onrender.com)
 
 ## 摘要 (Abstract)
 
