@@ -472,10 +472,18 @@
                 let simProgress = 0;
                 showLoading(true, 0, "正在連線交易所與爬取資料中，請稍候...");
                 const simInterval = setInterval(() => {
-                    if (simProgress < 90) {
-                        simProgress += Math.random() * 5 + 1;
-                        if (simProgress > 90) simProgress = 90;
-                        showLoading(true, simProgress, `爬蟲執行中... ${Math.floor(simProgress)}%`);
+                    if (simProgress < 95) {
+                        simProgress += Math.random() * 3 + 1;
+                        if (simProgress > 95) simProgress = 95;
+                        
+                        let msg = "正在抓取資料中...";
+                        const p = Math.floor(simProgress);
+                        if (p < 30) msg = `📡 爬取連線中... ${p}%`;
+                        else if (p < 60) msg = `🧹 資料清洗中... ${p}%`;
+                        else if (p < 80) msg = `🧮 資金矩陣運算中... ${p}%`;
+                        else msg = `📊 報表建構中... ${p}%`;
+                        
+                        showLoading(true, p, msg);
                     }
                 }, 400);
 
