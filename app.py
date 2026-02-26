@@ -1,8 +1,31 @@
 import os
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, Response
 import pandas as pd
 
 app = Flask(__name__)
+
+# Basic Authentication Configuration
+# 設定環境變數啟動「VIP 專屬包廂」保護機制
+USE_AUTH = os.environ.get('USE_AUTH', 'false').lower() == 'true'
+AUTH_USER = os.environ.get('AUTH_USER', 'admin')
+AUTH_PASS = os.environ.get('AUTH_PASS', 'stock1234')
+
+def check_auth(username, password):
+    return username == AUTH_USER and password == AUTH_PASS
+
+def authenticate():
+    return Response(
+    '您必須輸入正確的VIP通行證與密碼才能觀看目前的私有盤後報告。\n'
+    'Login Required to access Institutional Tracker.', 401,
+    {'WWW-Authenticate': 'Basic realm="VIP Login Required"'})
+
+@app.before_request
+def require_login():
+    # Only enforce if USE_AUTH is true
+    if USE_AUTH:
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
 
 # Ensure the template directory exists
 os.makedirs('templates', exist_ok=True)
