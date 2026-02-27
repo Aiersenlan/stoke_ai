@@ -1,9 +1,10 @@
 import requests
 import json
 import ssl
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import traceback
+import pandas as pd
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -228,8 +229,8 @@ def analyze(target_date_str=None):
     
     all_data = twse_data + tpex_data
     if not all_data:
-        print("No data available. The market might be closed or APIs changed.")
-        return
+        print(f"No data for {target_date_str}. The market might be closed.")
+        raise ValueError(f"No data available for {target_date_str}")
         
     print(f"Successfully processed {len(all_data)} stocks.")
     print("="*60)
@@ -466,5 +467,26 @@ def analyze(target_date_str=None):
 
 if __name__ == '__main__':
     import sys
-    target_date = sys.argv[1] if len(sys.argv) > 1 else None
-    analyze(target_date)
+    input_date = sys.argv[1] if len(sys.argv) > 1 else None
+    
+    if input_date:
+        # If a specific date is requested, we try just that one
+        analyze(input_date)
+    else:
+        # If no date is provided (auto-triggered by web or cron), 
+        # we start from today and look back up to 10 days for the latest report
+        success = False
+        start_date = datetime.now()
+        for i in range(10):
+            current_date_str = (start_date - timedelta(days=i)).strftime('%Y%m%d')
+            try:
+                print(f"--- Attempting back-dating search: Day {i+1} ({current_date_str}) ---")
+                analyze(current_date_str)
+                success = True
+                break
+            except ValueError:
+                continue
+        
+        if not success:
+            print("Failed to find any trading data in the last 10 days.")
+            sys.exit(1)
