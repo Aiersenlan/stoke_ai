@@ -3,8 +3,8 @@ name: Keep Render Alive
 on:
   schedule:
     # Render 免費方案主機只要 15 分鐘沒人存取就會睡眠
-    # 所以我們設定每 14 分鐘，GitHub 機器人就會去戳它一下，讓它保持清醒！
-    - cron: '*/14 * * * *'
+    # 設定每 1 分鐘就去戳它一下，讓它絕對保持清醒！
+    - cron: '* * * * *'
   # 這個選項只是讓我們可以在 GitHub 後台手動按一個按鈕叫它執行
   workflow_dispatch:
 
