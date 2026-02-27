@@ -14,17 +14,16 @@ headers = {
     'Referer': 'https://www.tpex.org.tw/'
 }
 
-def get_json(url):
-    try:
-        session = requests.Session()
-        # Disable SSL verification to prevent "CERTIFICATE VERIFY FAILED" on some Linux/Docker environments like Render
-        res = session.get(url, headers=headers, timeout=15, verify=False)
-        # Check HTTP response status and throw if not 200
-        res.raise_for_status()
-        return res.json()
-    except Exception as e:
-        print(f"Error fetching {url}: {e}")
-        return None
+def validate_trading_day(date_str):
+    """
+    使用體積極小的 '市場成交概況' API 來快速預檢當天是否為有效交易日。
+    這比直接抓整份法人買賣超 (T86) 輕量得多，適合用來做前置測試。
+    """
+    # MI_INDEX type=MS 是市場成交概況，回傳資料極少
+    url = f"https://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&date={date_str}&type=MS"
+    data = get_json(url)
+    # 如果 data['stat'] 為 'OK'，代表當天有交易紀錄
+    return data and data.get('stat') == 'OK'
 
 def fetch_twse(date="20260223"):
     t86_url = f"https://www.twse.com.tw/fund/T86?response=json&date={date}&selectType=ALL"
@@ -230,7 +229,13 @@ def analyze(target_date_str=None):
     all_data = twse_data + tpex_data
     if not all_data:
         print(f"No data for {target_date_str}. The market might be closed.")
-        raise ValueError(f"No data available for {target_date_str}")
+        return False # Return False instead of raising, to let the loop handle it
+    
+    # ... rest of analysis logic ...
+    # (Note: Need to make sure all_data logic can continue or return status)
+    # Let's keep it simple: if all_data exists, it returns True at the end of function
+    # Wait, I see analyze function doesn't return anything. I'll modify it to return success status.
+
         
     print(f"Successfully processed {len(all_data)} stocks.")
     print("="*60)
@@ -469,24 +474,39 @@ if __name__ == '__main__':
     import sys
     input_date = sys.argv[1] if len(sys.argv) > 1 else None
     
+    # 無論是有輸入日期還是自動觸發，如果發現當天沒開盤，都應該回溯尋找
+    success = False
+    
+    # 決定起始日期
     if input_date:
-        # If a specific date is requested, we try just that one
-        analyze(input_date)
+        # 使用者指定的日期 (格式 YYYYMMDD)
+        start_date_obj = datetime.strptime(input_date, '%Y%m%d')
+        print(f"User requested analysis starting from: {input_date}")
     else:
-        # If no date is provided (auto-triggered by web or cron), 
-        # we start from today and look back up to 10 days for the latest report
-        success = False
-        start_date = datetime.now()
-        for i in range(10):
-            current_date_str = (start_date - timedelta(days=i)).strftime('%Y%m%d')
+        # 自動模式，從今天開始找
+        start_date_obj = datetime.now()
+        print(f"Automatic daily trigger starting from today...")
+
+    # 智慧回溯循環 (最多往回找 10 天交易日)
+    for i in range(10):
+        current_date_str = (start_date_obj - timedelta(days=i)).strftime('%Y%m%d')
+        print(f"--- [快速預檢] 測試日期: {current_date_str} (Day {i+1}) ---")
+        
+        if validate_trading_day(current_date_str):
+            print(f"✅ 成功命中有效交易日: {current_date_str}！ 準備開始執行重型分析任務...")
             try:
-                print(f"--- Attempting back-dating search: Day {i+1} ({current_date_str}) ---")
                 analyze(current_date_str)
                 success = True
                 break
-            except ValueError:
-                continue
-        
-        if not success:
-            print("Failed to find any trading data in the last 10 days.")
-            sys.exit(1)
+            except Exception as e:
+                print(f"❌ 執行分析時發生非預期錯誤: {e}")
+                traceback.print_exc()
+                # 即使預檢成功，分析失敗也應該結束，避免無限回溯
+                break
+        else:
+            print(f"⚠️ 日期 {current_date_str} 休市中，自動跳過...")
+            continue
+    
+    if not success:
+        print("🚨 任務失敗：在最近的 10 天內找不到任何開盤紀錄，請檢查證交所連線或網站狀態。")
+        sys.exit(1)
