@@ -15,6 +15,18 @@ headers = {
     'Referer': 'https://www.tpex.org.tw/'
 }
 
+def get_json(url):
+    try:
+        session = requests.Session()
+        # Disable SSL verification to prevent "CERTIFICATE VERIFY FAILED" on some Linux/Docker environments like Render
+        res = session.get(url, headers=headers, timeout=15, verify=False)
+        # Check HTTP response status and throw if not 200
+        res.raise_for_status()
+        return res.json()
+    except Exception as e:
+        print(f"Error fetching {url}: {e}")
+        return None
+
 def validate_trading_day(date_str):
     """
     使用體積極小的 '市場成交概況' API 來快速預檢當天是否為有效交易日。
@@ -503,20 +515,20 @@ if __name__ == '__main__':
         print(f"--- [快速預檢] 測試日期: {current_date_str} (Day {i+1}) ---")
         
         if validate_trading_day(current_date_str):
-            print(f"✅ 成功命中有效交易日: {current_date_str}！ 準備開始執行重型分析任務...")
+            print(f"[OK] 成功命中有效交易日: {current_date_str}！ 準備開始執行重型分析任務...")
             try:
                 analyze(current_date_str)
                 success = True
                 break
             except Exception as e:
-                print(f"❌ 執行分析時發生非預期錯誤: {e}")
+                print(f"[ERROR] 執行分析時發生非預期錯誤: {e}")
                 traceback.print_exc()
                 # 即使預檢成功，分析失敗也應該結束，避免無限回溯
                 break
         else:
-            print(f"⚠️ 日期 {current_date_str} 休市中，自動跳過...")
+            print(f"[WARN] 日期 {current_date_str} 休市中，自動跳過...")
             continue
     
     if not success:
-        print("🚨 任務失敗：在最近的 10 天內找不到任何開盤紀錄，請檢查證交所連線或網站狀態。")
+        print("[CRITICAL] 任務失敗：在最近的 10 天內找不到任何開盤紀錄，請檢查證交所連線或網站狀態。")
         sys.exit(1)
