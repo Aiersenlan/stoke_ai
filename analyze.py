@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import time
 import traceback
 import pandas as pd
+import concurrent.futures
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -27,10 +28,13 @@ def validate_trading_day(date_str):
 
 def fetch_twse(date="20260223"):
     t86_url = f"https://www.twse.com.tw/fund/T86?response=json&date={date}&selectType=ALL"
-    t86_data = get_json(t86_url)
-    
     mi_url = f"https://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&date={date}&type=ALLBUT0999"
-    mi_data = get_json(mi_url)
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        f_t86 = executor.submit(get_json, t86_url)
+        f_mi = executor.submit(get_json, mi_url)
+        t86_data = f_t86.result()
+        mi_data = f_mi.result()
     
     if not t86_data or 'data' not in t86_data:
         print("Failed to get TWSE T86")
@@ -129,11 +133,14 @@ def fetch_twse(date="20260223"):
 def fetch_tpex(date_roc="115/02/23"):
     # tpex T86 equivalent
     t86_url = f"https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&se=EW&t=D&d={date_roc}"
-    t86_data = get_json(t86_url)
-    
     # tpex MI_INDEX equivalent
     mi_url = f"https://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_result.php?l=zh-tw&d={date_roc}"
-    mi_data = get_json(mi_url)
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        f_t86 = executor.submit(get_json, t86_url)
+        f_mi = executor.submit(get_json, mi_url)
+        t86_data = f_t86.result()
+        mi_data = f_mi.result()
     
     results = []
     if not t86_data or 'tables' not in t86_data or not t86_data['tables']:
@@ -222,9 +229,12 @@ def analyze(target_date_str=None):
     twse_date = target_date_str
     tpex_date = f"{roc_year:03d}/{month}/{day}"
     
-    print(f"Fetching data from TWSE ({twse_date}) and TPEX ({tpex_date})...")
-    twse_data = fetch_twse(twse_date)
-    tpex_data = fetch_tpex(tpex_date)
+    print(f"Fetching data from TWSE ({twse_date}) and TPEx ({tpex_date}) in parallel...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        f_twse = executor.submit(fetch_twse, twse_date)
+        f_tpex = executor.submit(fetch_tpex, tpex_date)
+        twse_data = f_twse.result()
+        tpex_data = f_tpex.result()
     
     all_data = twse_data + tpex_data
     if not all_data:
