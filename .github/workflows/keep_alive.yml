@@ -3,17 +3,17 @@ name: Keep Render Alive
 on:
   schedule:
     # Render 免費方案主機只要 15 分鐘沒人存取就會睡眠
-    # 設定每 1 分鐘就去戳它一下，讓它絕對保持清醒！
-    - cron: '* * * * *'
-  # 這個選項只是讓我們可以在 GitHub 後台手動按一個按鈕叫它執行
+    # GitHub 免費方案的 cron 其實最快只有約 5-10 分鐘跑一次
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: 戳一下您的 Render 網站 (Wake up call)
+      - name: 進行高強度喚醒 (GET Request)
         run: |
-          echo "正在呼叫您的網站： https://institutional-tracker.onrender.com/health"
-          # -s 是安靜模式， -I 是只抓取標頭(Headers)，這對喚醒主機來說就足夠了，可以省流量
-          curl -s -I "https://institutional-tracker.onrender.com/health"
+          echo "正在以 GET 模式喚醒網站： https://institutional-tracker.onrender.com/health"
+          # 使用 GET 請求並跟隨轉址，確保 Render 認定這是真實存取
+          curl -s -L "https://institutional-tracker.onrender.com/health" > /dev/null
+          echo "喚醒完成！"

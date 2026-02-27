@@ -32,6 +32,7 @@ def require_login():
 
 @app.route('/health')
 def health():
+    print(">>> Health check ping received! Keeping server awake. <<<")
     return "OK", 200
 
 # Ensure the template directory exists
